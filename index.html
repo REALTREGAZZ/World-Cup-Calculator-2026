@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description"
+        content="Simulador oficial del Mundial 2026 con 48 selecciones. Simula grupos, eliminatorias y descubre al campeón.">
+    <meta name="theme-color" content="#0f3460">
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1807548077304349"
+        crossorigin="anonymous"></script>
+
+    <title>Simulador Mundial 2026 - Copa del Mundo</title>
+
+    <!-- PWA Support -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- iOS Specific Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mundial 2026">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Simulador Mundial 2026">
+    <meta property="og:description"
+        content="Simulador oficial del Mundial 2026 con 48 selecciones. Simula grupos, eliminatorias y descubre al campeón.">
+    <meta property="og:image" content="icon-512.png">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- PANTALLA DE INICIO -->
+    <div id="start-screen" class="start-screen">
+        <div class="start-content">
+            <div class="start-logo">⚽</div>
+            <h1 class="start-title">
+                <span data-i18n="welcome">Bienvenido al</span><br>
+                <span class="gradient-text" data-i18n="worldCup">Mundial 2026</span>
+            </h1>
+            <p class="start-subtitle">FIFA World Cup</p>
+            <div class="start-buttons">
+                <button onclick="startTournament()" class="btn-start" data-i18n="startButton">Comenzar</button>
+                <button onclick="showSettings()" class="btn-settings" data-i18n="settingsButton">Ajustes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANTALLA DE AJUSTES -->
+    <div id="settings-screen" class="settings-screen" style="display: none;">
+        <div class="settings-content">
+            <h2 data-i18n="settings">Ajustes</h2>
+
+            <div class="settings-section">
+                <label data-i18n="language">Idioma</label>
+                <div class="language-selector">
+                    <button onclick="setLanguage('es')" class="lang-btn" data-lang="es">
+                        <span class="flag-emoji">🇪🇸</span>
+                        <span data-i18n="spanish">Español</span>
+                    </button>
+                    <button onclick="setLanguage('en')" class="lang-btn" data-lang="en">
+                        <span class="flag-emoji">🇬🇧</span>
+                        <span data-i18n="english">Inglés</span>
+                    </button>
+                    <button onclick="setLanguage('fr')" class="lang-btn" data-lang="fr">
+                        <span class="flag-emoji">🇫🇷</span>
+                        <span data-i18n="french">Francés</span>
+                    </button>
+                    <button onclick="setLanguage('pt')" class="lang-btn" data-lang="pt">
+                        <span class="flag-emoji">🇵🇹</span>
+                        <span data-i18n="portuguese">Portugués</span>
+                    </button>
+                </div>
+            </div>
+
+            <button onclick="closeSettings()" class="btn-back" data-i18n="backButton">Volver</button>
+        </div>
+    </div>
+
+    <!-- APP PRINCIPAL -->
+    <div id="main-app" style="display: none;">
+        <header>
+            <h1>⚽ <span data-i18n="worldCup">Mundial 2026</span></h1>
+            <nav id="main-nav">
+                <button class="nav-btn active" onclick="showSection('playoffs')"
+                    data-i18n="navPlayoffs">Repescas</button>
+                <button class="nav-btn" onclick="showSection('groups')" id="groups-nav-btn" data-i18n="navGroups"
+                    disabled>Grupos</button>
+                <button class="nav-btn" onclick="goToKnockout()" id="knockout-nav-btn" data-i18n="navKnockout"
+                    disabled>Fase Final</button>
+                <button class="nav-btn" onclick="showSection('stats')" id="stats-nav-btn" data-i18n="navResults"
+                    disabled>Resultados</button>
+            </nav>
+        </header>
+
+        <!-- AdSense Banner Superior -->
+        <div style="margin: 10px auto; text-align: center; max-width: 100%; overflow: hidden;">
+            <script async
+                src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1807548077304349"
+                crossorigin="anonymous"></script>
+            <!-- BannerSuperior -->
+            <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-1807548077304349"
+                data-ad-slot="2238582261" data-ad-format="auto" data-full-width-responsive="true"></ins>
+            <script>
+                (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+        </div>
+
+        <main id="app">
+
+            <!-- SECCIÓN REPESCAS -->
+            <section id="playoffs" class="active-section">
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <h2 style="color: #eab308; margin-bottom: 0.5rem;">🎯 <span data-i18n="playoffsTitle">Repescas de
+                            Clasificación</span></h2>
+                    <p style="color: #94a3b8; font-size: 0.9rem;" data-i18n="playoffsDesc">
+                        Resuelve las repescas para completar los 48 equipos clasificados
+                    </p>
+                </div>
+
+                <div class="actions-bar">
+                    <button onclick="simulateAllPlayoffs()" class="btn-secondary">
+                        🎲 <span data-i18n="simulateAll">Simular Todas</span>
+                    </button>
+                    <button onclick="finishPlayoffsAndContinue()" class="btn-primary" id="finish-playoffs-btn">
+                        ✅ <span data-i18n="continueButton">Continuar al Torneo</span>
+                    </button>
+                </div>
+
+                <div id="playoffs-container"></div>
+            </section>
+
+            <!-- SECCIÓN GRUPOS -->
+            <section id="groups">
+                <div class="actions-bar">
+                    <button onclick="simulateAllGroups()" class="btn-primary">
+                        ⚡ <span data-i18n="simulateGroups">Simular Grupos</span>
+                    </button>
+                    <button onclick="resetTournament()" class="btn-secondary">
+                        🔄 <span data-i18n="resetTournament">Reiniciar</span>
+                    </button>
+                </div>
+                <div class="actions-bar">
+                    <button onclick="simulateFullTournament()" class="btn-turbo">
+                        🚀 <span data-i18n="simulateFullTournament">Simular Mundial Completo</span>
+                    </button>
+                </div>
+                <div id="groups-container"></div>
+            </section>
+
+            <!-- SECCIÓN ELIMINATORIAS -->
+            <section id="knockout">
+                <div class="actions-bar">
+                    <button onclick="simulateAllKnockout()" class="btn-primary">
+                        ⚡ <span data-i18n="simulateKnockout">Simular Fase Final</span>
+                    </button>
+                </div>
+
+                <div class="bracket-stage" id="r32-container">
+                    <h3 data-i18n="roundOf32">Dieciseisavos de Final</h3>
+                    <div class="matches-list" id="r32-matches"></div>
+                </div>
+
+                <div class="bracket-stage" id="r16-container">
+                    <h3 data-i18n="roundOf16">Octavos de Final</h3>
+                    <div class="matches-list" id="r16-matches"></div>
+                </div>
+
+                <div class="bracket-stage" id="qf-container">
+                    <h3 data-i18n="quarterFinals">Cuartos de Final</h3>
+                    <div class="matches-list" id="qf-matches"></div>
+                </div>
+
+                <div class="bracket-stage" id="sf-container">
+                    <h3 data-i18n="semiFinals">Semifinales</h3>
+                    <div class="matches-list" id="sf-matches"></div>
+                </div>
+
+                <div id="finals-placeholder" style="text-align: center; padding: 3rem; color: #64748b; display: none;">
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">⏳</div>
+                    <h3 style="color: #94a3b8; margin-bottom: 1rem;">Finales Pendientes</h3>
+                    <p>Completa ambas semifinales para que se generen los partidos de Tercer Puesto y la Gran Final.</p>
+                </div>
+
+                <div class="finals-container" id="finals-content" style="display: none;">
+                    <!-- TERCER PUESTO -->
+                    <div class="final-match-card">
+                        <div class="final-match-header">
+                            <span class="medal-icon">🥉</span>
+                            <h3 data-i18n="thirdPlace">TERCER PUESTO</h3>
+                        </div>
+                        <div id="third-place-match-matches" class="matches-list"></div>
+                    </div>
+
+                    <!-- GRAN FINAL -->
+                    <div class="final-match-card highlight">
+                        <div class="final-match-header">
+                            <span class="trophy-icon-big">🏆</span>
+                            <h2 data-i18n="final">GRAN FINAL</h2>
+                        </div>
+                        <div id="final-match-matches" class="matches-list"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECCIÓN ESTADÍSTICAS -->
+            <section id="stats">
+                <div class="stats-card">
+                    <h2>🏆 <span data-i18n="champion2026">Campeón Mundial 2026</span></h2>
+                    <div id="champion-display">
+                        <span style="font-size: 4rem;">❓</span>
+                        <p style="color: #64748b; margin-top: 1rem;" data-i18n="completeTournament">Completa el torneo
+                            para ver al campeón</p>
+                    </div>
+                </div>
+
+                <div class="stats-card">
+                    <h3>🥉 <span data-i18n="bestThirds">Mejores Terceros Clasificados</span></h3>
+                    <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 1rem;" data-i18n="bestThirdsDesc">
+                        Los 8 mejores terceros avanzan a dieciseisavos
+                    </p>
+                    <table class="standings-table">
+                        <thead>
+                            <tr>
+                                <th>Equipo</th>
+                                <th data-i18n="points">Pts</th>
+                                <th data-i18n="goalDiff">DG</th>
+                                <th data-i18n="goalsFor">GF</th>
+                            </tr>
+                        </thead>
+                        <tbody id="best-thirds-body">
+                            <tr>
+                                <td colspan="4" style="text-align: center; color: #64748b; padding: 2rem;"
+                                    data-i18n="completeGroups">
+                                    Completa la fase de grupos
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- AdSense Banner Inferior -->
+            <div style="margin: 20px auto; text-align: center; max-width: 100%; overflow: hidden;">
+                <script async
+                    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1807548077304349"
+                    crossorigin="anonymous"></script>
+                <!-- banner_inferior -->
+                <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-1807548077304349"
+                    data-ad-slot="2760669900" data-ad-format="auto" data-full-width-responsive="true"></ins>
+                <script>
+                    (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- MODAL PARA EDITAR PARTIDO -->
+    <div id="match-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h3 id="modal-match-title" data-i18n="editMatch">Editar Partido</h3>
+            <div class="score-input-container">
+                <div class="team-input">
+                    <img id="modal-flag-1" src="" alt="Team 1">
+                    <span id="modal-name-1">Team 1</span>
+                    <input type="number" id="score-1" min="0" max="20" placeholder="0">
+                </div>
+                <span class="vs">VS</span>
+                <div class="team-input">
+                    <img id="modal-flag-2" src="" alt="Team 2">
+                    <span id="modal-name-2">Team 2</span>
+                    <input type="number" id="score-2" min="0" max="20" placeholder="0">
+                </div>
+            </div>
+            <div id="penalty-section" style="display: none; margin: 1rem 0;">
+                <p style="text-align: center; color: #94a3b8; font-size: 0.85rem; margin-bottom: 0.5rem;"
+                    data-i18n="ifTied">
+                    Si hay empate (solo fase final):
+                </p>
+                <div style="display: flex; gap: 1rem; justify-content: center; align-items: center;">
+                    <div>
+                        <label style="font-size: 0.8rem; color: #64748b;" data-i18n="penalties">Penaltis</label>
+                        <input type="number" id="pen-1" min="0" max="10" placeholder="0"
+                            style="width: 50px; text-align: center;">
+                    </div>
+                    <span style="color: #64748b;">-</span>
+                    <div>
+                        <label style="font-size: 0.8rem; color: #64748b;" data-i18n="penalties">Penaltis</label>
+                        <input type="number" id="pen-2" min="0" max="10" placeholder="0"
+                            style="width: 50px; text-align: center;">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button onclick="saveMatchResult()" class="btn-primary">
+                    💾 <span data-i18n="saveButton">Guardar</span>
+                </button>
+                <button onclick="simulateSingleMatchFromModal()" class="btn-secondary">
+                    🎲 <span data-i18n="simulateButton">Simular</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confetti Container -->
+    <div id="confetti-container"></div>
+
+
+    <script src="translations.js"></script>
+    <script src="data.js"></script>
+    <script src="main.js"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then((registration) => {
+                        console.log('Service Worker registrado exitosamente:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.log('Error al registrar Service Worker:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+
+</html>
