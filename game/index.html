@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Three.js GTA-style sandbox world">
+
+    <title>3D World Sandbox</title>
+
+    <link rel="stylesheet" href="game.css">
+</head>
+
+<body>
+    <!-- 3D Canvas -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- HUD Shell -->
+    <div id="hud" class="hud-container">
+        <div class="hud-top-left">
+            <div class="hud-panel">
+                <div class="hud-label">FPS</div>
+                <div id="fps-counter" class="hud-value">60</div>
+            </div>
+        </div>
+
+        <div class="hud-top-right">
+            <div class="hud-panel">
+                <div class="hud-label">Time</div>
+                <div id="time-display" class="hud-value">12:00</div>
+            </div>
+        </div>
+
+        <div class="hud-bottom-left">
+            <div class="hud-panel">
+                <div class="hud-label">Controls</div>
+                <div class="hud-keys">
+                    <span>W/A/S/D</span> - Move | <span>Mouse</span> - Look
+                </div>
+            </div>
+        </div>
+
+        <div class="hud-bottom-right">
+            <button id="back-button" class="hud-button">← Back</button>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <p>Loading world...</p>
+    </div>
+
+    <!-- Main Game Module -->
+    <script type="module" src="src/main.js"></script>
+</body>
+
+</html>
