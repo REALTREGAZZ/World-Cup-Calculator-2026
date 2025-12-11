@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Player Movement System - Demo</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+    
+    #canvas-container {
+      width: 100vw;
+      height: 100vh;
+    }
+    
+    #instructions {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 15px;
+      border-radius: 5px;
+      font-size: 14px;
+      max-width: 300px;
+      z-index: 1000;
+    }
+    
+    #instructions h3 {
+      margin: 0 0 10px 0;
+      font-size: 16px;
+    }
+    
+    #instructions ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+    
+    #instructions li {
+      margin: 5px 0;
+    }
+    
+    #loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 30px;
+      border-radius: 10px;
+      font-size: 18px;
+      z-index: 2000;
+    }
+    
+    #pointer-lock-prompt {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 40px;
+      border-radius: 10px;
+      text-align: center;
+      z-index: 2000;
+      cursor: pointer;
+    }
+    
+    #pointer-lock-prompt h2 {
+      margin: 0 0 20px 0;
+    }
+    
+    #pointer-lock-prompt button {
+      background: #4080ff;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    
+    #pointer-lock-prompt button:hover {
+      background: #5090ff;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  
+  <div id="instructions">
+    <h3>Controls</h3>
+    <ul>
+      <li><strong>WASD / Arrows</strong> - Move</li>
+      <li><strong>Space</strong> - Jump</li>
+      <li><strong>Shift</strong> - Sprint</li>
+      <li><strong>Mouse</strong> - Look around</li>
+      <li><strong>Scroll</strong> - Zoom camera</li>
+      <li><strong>ESC</strong> - Release mouse</li>
+    </ul>
+  </div>
+  
+  <div id="loading">Loading player model...</div>
+  
+  <div id="pointer-lock-prompt" style="display: none;">
+    <h2>Click to Start</h2>
+    <p>Click anywhere or press the button below to lock the cursor and start playing.</p>
+    <button>Start</button>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { Player } from './Player.js';
+
+    class SimpleInputMapper {
+      constructor() {
+        this.keys = {};
+        this.mouseMovement = { x: 0, y: 0 };
+        this.wheelDelta = 0;
+        this.pointerLocked = false;
+        
+        window.addEventListener('keydown', (e) => {
+          this.keys[e.code] = true;
+        });
+        
+        window.addEventListener('keyup', (e) => {
+          this.keys[e.code] = false;
+        });
+        
+        document.addEventListener('pointerlockchange', () => {
+          this.pointerLocked = document.pointerLockElement === document.body;
+          
+          if (this.pointerLocked) {
+            document.getElementById('pointer-lock-prompt').style.display = 'none';
+          }
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+          if (this.pointerLocked) {
+            this.mouseMovement.x = e.movementX;
+            this.mouseMovement.y = e.movementY;
+          }
+        });
+        
+        document.addEventListener('wheel', (e) => {
+          this.wheelDelta = e.deltaY * -0.01;
+        });
+        
+        const promptButton = document.querySelector('#pointer-lock-prompt button');
+        const startGame = () => {
+          document.body.requestPointerLock();
+        };
+        
+        promptButton.addEventListener('click', startGame);
+        document.body.addEventListener('click', () => {
+          if (!this.pointerLocked) {
+            startGame();
+          }
+        });
+        
+        setTimeout(() => {
+          document.getElementById('pointer-lock-prompt').style.display = 'block';
+        }, 1000);
+      }
+      
+      getAxis(name) {
+        switch(name) {
+          case 'MoveForward':
+            return (this.keys['KeyW'] || this.keys['ArrowUp'] ? 1 : 0) +
+                   (this.keys['KeyS'] || this.keys['ArrowDown'] ? -1 : 0);
+          case 'MoveRight':
+            return (this.keys['KeyD'] || this.keys['ArrowRight'] ? 1 : 0) +
+                   (this.keys['KeyA'] || this.keys['ArrowLeft'] ? -1 : 0);
+          case 'LookX':
+            return 0;
+          case 'LookY':
+            return 0;
+          case 'Zoom':
+            const delta = this.wheelDelta;
+            this.wheelDelta = 0;
+            return delta;
+          default:
+            return 0;
+        }
+      }
+      
+      getButton(name) {
+        switch(name) {
+          case 'Sprint':
+            return this.keys['ShiftLeft'] || this.keys['ShiftRight'];
+          case 'Jump':
+            return this.keys['Space'];
+          default:
+            return false;
+        }
+      }
+      
+      getMouseDelta() {
+        const delta = { ...this.mouseMovement };
+        this.mouseMovement.x = 0;
+        this.mouseMovement.y = 0;
+        return delta;
+      }
+    }
+
+    class DemoScene {
+      constructor() {
+        this.setupScene();
+        this.setupLighting();
+        this.createEnvironment();
+        this.setupInput();
+        this.setupPlayer();
+        this.animate();
+        
+        window.addEventListener('resize', () => this.onWindowResize());
+      }
+      
+      setupScene() {
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(0x87ceeb);
+        this.scene.fog = new THREE.Fog(0x87ceeb, 50, 150);
+        
+        this.camera = new THREE.PerspectiveCamera(
+          75,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          1000
+        );
+        
+        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.getElementById('canvas-container').appendChild(this.renderer.domElement);
+        
+        this.clock = new THREE.Clock();
+      }
+      
+      setupLighting() {
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        this.scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(50, 100, 50);
+        directionalLight.castShadow = true;
+        directionalLight.shadow.camera.left = -50;
+        directionalLight.shadow.camera.right = 50;
+        directionalLight.shadow.camera.top = 50;
+        directionalLight.shadow.camera.bottom = -50;
+        directionalLight.shadow.camera.near = 0.1;
+        directionalLight.shadow.camera.far = 200;
+        directionalLight.shadow.mapSize.width = 2048;
+        directionalLight.shadow.mapSize.height = 2048;
+        this.scene.add(directionalLight);
+      }
+      
+      createEnvironment() {
+        const groundGeometry = new THREE.PlaneGeometry(200, 200);
+        const groundMaterial = new THREE.MeshStandardMaterial({ 
+          color: 0x228822,
+          roughness: 0.8,
+          metalness: 0.2
+        });
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        ground.userData.isCollider = true;
+        ground.name = 'ground';
+        this.scene.add(ground);
+        
+        const buildings = [
+          { pos: [15, 5, 15], size: [8, 10, 8], color: 0x666666 },
+          { pos: [-20, 4, 20], size: [6, 8, 6], color: 0x888888 },
+          { pos: [25, 7.5, -10], size: [10, 15, 10], color: 0x555555 },
+          { pos: [-15, 3, -15], size: [5, 6, 5], color: 0x777777 },
+          { pos: [0, 2.5, 30], size: [12, 5, 8], color: 0x999999 }
+        ];
+        
+        buildings.forEach((building, index) => {
+          const geometry = new THREE.BoxGeometry(...building.size);
+          const material = new THREE.MeshStandardMaterial({ 
+            color: building.color,
+            roughness: 0.7,
+            metalness: 0.3
+          });
+          const mesh = new THREE.Mesh(geometry, material);
+          mesh.position.set(...building.pos);
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+          mesh.userData.isCollider = true;
+          mesh.name = `building_${index}`;
+          this.scene.add(mesh);
+        });
+        
+        const rampGeometry = new THREE.BoxGeometry(10, 0.5, 15);
+        const rampMaterial = new THREE.MeshStandardMaterial({ 
+          color: 0xcccccc,
+          roughness: 0.6
+        });
+        const ramp = new THREE.Mesh(rampGeometry, rampMaterial);
+        ramp.position.set(-30, 2, 0);
+        ramp.rotation.z = Math.PI / 12;
+        ramp.castShadow = true;
+        ramp.receiveShadow = true;
+        ramp.userData.isCollider = true;
+        ramp.name = 'ramp';
+        this.scene.add(ramp);
+        
+        for (let i = 0; i < 20; i++) {
+          const treeGeometry = new THREE.CylinderGeometry(0.5, 0.5, 5, 8);
+          const treeMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+          const tree = new THREE.Mesh(treeGeometry, treeMaterial);
+          
+          const foliageGeometry = new THREE.SphereGeometry(2, 8, 8);
+          const foliageMaterial = new THREE.MeshStandardMaterial({ color: 0x228B22 });
+          const foliage = new THREE.Mesh(foliageGeometry, foliageMaterial);
+          foliage.position.y = 4;
+          tree.add(foliage);
+          
+          const angle = (i / 20) * Math.PI * 2;
+          const radius = 40 + Math.random() * 30;
+          tree.position.set(
+            Math.cos(angle) * radius,
+            2.5,
+            Math.sin(angle) * radius
+          );
+          
+          tree.castShadow = true;
+          tree.receiveShadow = true;
+          tree.userData.isCollider = true;
+          tree.name = `tree_${i}`;
+          this.scene.add(tree);
+        }
+      }
+      
+      setupInput() {
+        this.inputMapper = new SimpleInputMapper();
+      }
+      
+      setupPlayer() {
+        const collisionWorld = {
+          getColliders: () => {
+            return this.scene.children.filter(obj => 
+              obj.isMesh && obj.userData.isCollider
+            );
+          }
+        };
+        
+        this.player = new Player(this.scene, this.camera, collisionWorld, this.inputMapper, {
+          modelPath: '/game/assets/models/character.glb',
+          scale: 1.0,
+          debug: true,
+          controller: {
+            walkSpeed: 3.5,
+            runSpeed: 7.0,
+            jumpForce: 8.0,
+            gravity: 25.0,
+            capsuleRadius: 0.35,
+            capsuleHeight: 1.8
+          },
+          camera: {
+            distance: 6.0,
+            height: 2.5,
+            targetHeight: 1.5,
+            smoothSpeed: 8.0,
+            mouseSensitivity: 0.002
+          }
+        });
+        
+        this.player.setPosition(0, 5, 0);
+        
+        document.getElementById('loading').style.display = 'none';
+      }
+      
+      animate() {
+        requestAnimationFrame(() => this.animate());
+        
+        const deltaTime = this.clock.getDelta();
+        
+        if (this.player) {
+          this.player.update(deltaTime);
+          this.player.updateDebugUI();
+        }
+        
+        this.renderer.render(this.scene, this.camera);
+      }
+      
+      onWindowResize() {
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+    }
+
+    new DemoScene();
+  </script>
+</body>
+</html>
