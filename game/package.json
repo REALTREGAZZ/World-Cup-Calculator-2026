@@ -1,0 +1,40 @@
+{
+  "name": "game-player-movement-system",
+  "version": "1.0.0",
+  "description": "Complete third-person character controller system for Three.js with physics, animations, and camera controls",
+  "type": "module",
+  "main": "src/entities/index.js",
+  "exports": {
+    ".": "./src/entities/index.js",
+    "./Player": "./src/entities/Player.js",
+    "./CharacterController": "./src/entities/CharacterController.js",
+    "./CameraRig": "./src/entities/CameraRig.js"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "threejs",
+    "character-controller",
+    "game",
+    "3d",
+    "physics",
+    "camera",
+    "animation",
+    "player-movement"
+  ],
+  "peerDependencies": {
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  },
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": ""
+  }
+}
